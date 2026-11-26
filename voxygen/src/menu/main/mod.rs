@@ -505,50 +505,20 @@ impl PlayState for MainMenuState {
             .maintain(global_state, global_state.clock.real_dt())
         {
             match event {
+                // Offline build: connecting to remote servers is disabled. The
+                // game only runs on the local, in-memory singleplayer server.
                 MainMenuEvent::LoginAttempt { server_address } => {
-                    let net_settings = &mut global_state.settings.networking;
-                    let use_srv = net_settings.use_srv;
-                    let use_quic = net_settings.use_quic;
-                    let validate_tls = net_settings.validate_tls;
-                    net_settings.default_server.clone_from(&server_address);
-                    if !server_address.is_empty() && !net_settings.servers.contains(&server_address)
-                    {
-                        net_settings.servers.push(server_address.clone());
-                    }
-                    global_state
-                        .settings
-                        .save_to_file_warn(&global_state.config_dir);
-
-                    let connection_args = if use_srv {
-                        ConnectionArgs::Srv {
-                            hostname: server_address,
-                            prefer_ipv6: false,
-                            validate_tls,
-                            use_quic,
-                        }
-                    } else if use_quic {
-                        ConnectionArgs::Quic {
-                            hostname: server_address,
-                            prefer_ipv6: false,
-                            validate_tls,
-                        }
-                    } else {
-                        ConnectionArgs::Tcp {
-                            hostname: server_address,
-                            prefer_ipv6: false,
-                        }
-                    };
-                    attempt_login(
-                        connection_args,
-                        &mut self.init,
-                        &global_state.tokio_runtime,
+                    tracing::warn!(
+                        %server_address,
+                        "Offline build: refusing to connect to a remote server"
+                    );
+                    self.main_menu_ui.cancel_connection();
+                    self.main_menu_ui.show_info(
                         global_state
-                            .settings
-                            .language
-                            .send_to_server
-                            .then_some(global_state.settings.language.selected_language.clone()),
-                        &global_state.config_dir,
-                        global_state.args.client_type.0,
+                            .i18n
+                            .read()
+                            .get_msg("main-offline-only")
+                            .into_owned(),
                     );
                 },
                 MainMenuEvent::CancelLoginAttempt => {
@@ -869,6 +839,12 @@ fn attempt_login(
     config_dir: &Path,
     client_type: ClientType,
 ) {
+    // Offline build: only the in-memory connection to the local singleplayer
+    // server is allowed. Never open a network connection.
+    if !matches!(connection_args, ConnectionArgs::Mpsc(_)) {
+        tracing::error!("Offline build: refusing to open a network connection");
+        return;
+    }
     // Don't try to connect if there is already a connection in progress.
     if let InitState::None = init {
         *init = InitState::Client(ClientInit::new(

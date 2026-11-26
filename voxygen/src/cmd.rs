@@ -750,24 +750,13 @@ fn handle_waypoint(
 fn handle_wiki(
     _session_state: &mut SessionState,
     _global_state: &mut GlobalState,
-    args: Vec<String>,
+    _args: Vec<String>,
 ) -> CommandResult {
-    let url = if args.is_empty() {
-        "https://wiki.veloren.net/".to_string()
-    } else {
-        let query_string = args.join("+");
-
-        format!("https://wiki.veloren.net/w/index.php?search={query_string}")
-    };
-
-    open::that_detached(url)
-        .map(|_| Some(Content::localized("command-wiki-success")))
-        .map_err(|e| {
-            Content::localized_with_args("command-wiki-fail", [(
-                "error",
-                LocalizationArg::from(e.to_string()),
-            )])
-        })
+    // Offline build: never open web pages.
+    Err(Content::localized_with_args("command-wiki-fail", [(
+        "error",
+        LocalizationArg::from("offline".to_string()),
+    )]))
 }
 
 /// Handles [`ClientChatCommand::ResetTutorial`]

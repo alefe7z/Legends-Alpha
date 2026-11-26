@@ -23,7 +23,6 @@ use common::{
     rtsim::WorldSettings,
 };
 use core::time::Duration;
-use portpicker::pick_unused_port;
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
@@ -291,14 +290,10 @@ impl Settings {
     pub fn singleplayer(path: &Path) -> Self {
         let load = Self::load(path);
         Self {
-            // BUG: theoretically another process can grab the port between here and server
-            // creation, however the time window is quite small.
-            gameserver_protocols: vec![Protocol::Tcp {
-                address: SocketAddr::from((
-                    Ipv4Addr::LOCALHOST,
-                    pick_unused_port().expect("Failed to find unused port!"),
-                )),
-            }],
+            // Offline build: the singleplayer server never listens on the network.
+            // The game client talks to it through an in-memory channel only.
+            gameserver_protocols: Vec::new(),
+            query_address: None,
             auth_server_address: None,
             // If loading the default map file, make sure the seed is also default.
             world_seed: if load.map_file.is_some() {

@@ -553,7 +553,10 @@ fn mage_mana_is_innate_mainhand() {
         .and_then(|i| i.item_definition_id().itemdef_id().map(str::to_owned));
     assert_eq!(equipped, Some(mana_item));
     // Not part of the loadout: it cannot be picked up from the equip slot.
-    assert!(inv.get_slot(Slot::Equip(EquipSlot::ActiveMainhand)).is_none());
+    assert!(
+        inv.get_slot(Slot::Equip(EquipSlot::ActiveMainhand))
+            .is_none()
+    );
     assert!(inv.loadout.equipped(EquipSlot::ActiveMainhand).is_none());
 
     // An equipped weapon takes priority over the Mana.
@@ -562,7 +565,10 @@ fn mage_mana_is_innate_mainhand() {
     let equipped = inv
         .equipped(EquipSlot::ActiveMainhand)
         .and_then(|i| i.item_definition_id().itemdef_id().map(str::to_owned));
-    assert_eq!(equipped.as_deref(), Some("common.items.weapons.sword.starter"));
+    assert_eq!(
+        equipped.as_deref(),
+        Some("common.items.weapons.sword.starter")
+    );
 
     // Other species have no innate item.
     let human = humanoid::Body::random_with(&mut rand::rng(), &humanoid::Species::Human);

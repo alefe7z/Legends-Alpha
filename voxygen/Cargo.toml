@@ -38,11 +38,11 @@ discord = ["discord-sdk"]
 bin_cmd_doc_gen = []
 
 # We don't ship egui with published release builds so a separate feature is required that excludes it.
+# Offline build: the "discord" feature (Discord Rich Presence) is not enabled.
 default-publish = [
     "singleplayer",
     "native-dialog",
     "plugins",
-    "discord",
     "simd",
 ]
 default = ["default-publish", "hot-reloading", "shaderc-from-source", "egui-ui"]

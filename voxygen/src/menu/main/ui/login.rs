@@ -6,7 +6,7 @@ use crate::ui::{
         component::neat_button,
         style,
         widget::{
-            AspectRatioContainer, BackgroundContainer, Image, Padding,
+            BackgroundContainer, Image, Padding,
             compound_graphic::{CompoundGraphic, Graphic},
         },
     },
@@ -14,13 +14,10 @@ use crate::ui::{
 
 use i18n::{LanguageMetadata, Localization};
 use iced::{
-    Align, Button, Column, Container, Length, Row, Scrollable, Space, Text, TextInput, button,
-    scrollable, text_input,
+    Align, Button, Column, Container, Length, Row, Scrollable, Space, Text, button, scrollable,
+    text_input,
 };
 use vek::*;
-
-const INPUT_WIDTH: u16 = 230;
-const INPUT_TEXT_SIZE: u16 = 20;
 
 /// Login screen for the main menu
 #[derive(Default)]
@@ -51,18 +48,9 @@ impl Screen {
         language_metadatas: &[LanguageMetadata],
         button_style: style::button::Style,
     ) -> Element<'_, Message> {
+        // Offline build: there is no server list, the game only runs locally.
+        let _ = &mut self.servers_button;
         let mut buttons = Vec::new();
-        // If the server field is locked, we don't want to show the server selection
-        // list!
-        if !server_field_locked {
-            buttons.push(neat_button(
-                &mut self.servers_button,
-                i18n.get_msg("common-servers"),
-                FILL_FRAC_ONE,
-                button_style,
-                Some(Message::ShowServers),
-            ))
-        }
         buttons.extend([
             // neat_button(
             //     &mut self.settings_button,
@@ -340,86 +328,35 @@ impl LoginBanner {
         i18n: &Localization,
         button_style: style::button::Style,
     ) -> Element<'_, Message> {
-        let input_text_size = fonts.cyri.scale(INPUT_TEXT_SIZE);
+        // Offline build: no server address field and no multiplayer button. The
+        // game always runs on a local, in-memory server (no network at all).
+        let _ = (
+            server_field_locked,
+            server_address,
+            imgs,
+            fonts,
+            &mut self.server,
+            &mut self.multiplayer_button,
+            &mut self.unlock_server_field_button,
+        );
 
-        let server_field: Element<Message> = if server_field_locked {
-            let unlock_style = style::button::Style::new(imgs.unlock)
-                .hover_image(imgs.unlock_hover)
-                .press_image(imgs.unlock_press);
-
-            let unlock_button = Button::new(
-                &mut self.unlock_server_field_button,
-                Space::new(Length::Fill, Length::Fill),
-            )
-            .style(unlock_style)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .on_press(Message::UnlockServerField);
-
-            let container = AspectRatioContainer::new(unlock_button);
-            let container = match unlock_style.active().0 {
-                Some((img, _)) => container.ratio_of_image(img),
-                None => container,
-            };
-
-            Row::with_children(vec![
-                Text::new(server_address)
-                    .size(input_text_size)
-                    .width(Length::Fill)
-                    .height(Length::Shrink)
-                    .into(),
-                container.into(),
-            ])
-            .align_items(Align::Center)
-            .height(Length::Fill)
-            .into()
-        } else {
-            TextInput::new(
-                &mut self.server,
-                &i18n.get_msg("main-server"),
-                server_address,
-                Message::Server,
-            )
-            .size(input_text_size)
-            .on_submit(Message::Multiplayer)
-            .into()
-        };
+        #[cfg(feature = "singleplayer")]
+        let play_button = neat_button(
+            &mut self.singleplayer_button,
+            i18n.get_msg("common-singleplayer"),
+            FILL_FRAC_TWO,
+            button_style,
+            Some(Message::Singleplayer),
+        );
+        #[cfg(not(feature = "singleplayer"))]
+        let play_button: Element<Message> = Text::new(i18n.get_msg("common-singleplayer")).into();
 
         let banner_content = Column::with_children(vec![
-            Column::with_children(vec![
-                BackgroundContainer::new(
-                    Image::new(imgs.input_bg)
-                        .width(Length::Units(INPUT_WIDTH))
-                        .fix_aspect_ratio(),
-                    server_field,
-                )
-                .padding(Padding::new().horizontal(7).vertical(5))
+            Column::with_children(vec![play_button])
+                .max_width(170)
+                .height(Length::Units(200))
+                .spacing(8)
                 .into(),
-            ])
-            .spacing(5)
-            .into(),
-            Space::new(Length::Fill, Length::Units(8)).into(),
-            Column::with_children(vec![
-                neat_button(
-                    &mut self.multiplayer_button,
-                    i18n.get_msg("common-multiplayer"),
-                    FILL_FRAC_TWO,
-                    button_style,
-                    Some(Message::Multiplayer),
-                ),
-                #[cfg(feature = "singleplayer")]
-                neat_button(
-                    &mut self.singleplayer_button,
-                    i18n.get_msg("common-singleplayer"),
-                    FILL_FRAC_TWO,
-                    button_style,
-                    Some(Message::Singleplayer),
-                ),
-            ])
-            .max_width(170)
-            .height(Length::Units(200))
-            .spacing(8)
-            .into(),
         ])
         .width(Length::Fill)
         .align_items(Align::Center);

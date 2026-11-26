@@ -108,3 +108,7 @@ main-singleplayer-seed = Semente
 menu-singleplayer-confirm_delete = Tem certeza que deseja deletar "{ $world_name }"?
 main-singleplayer-day_length = Duração do dia
 main-singleplayer-size_lg = Tamanho logarítmico
+
+## Versão offline
+
+main-offline-only = Este jogo é somente offline. Use "Um Jogador".

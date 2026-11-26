@@ -65,9 +65,6 @@ image_ids_ice! {
         #[cfg(feature = "singleplayer")]
         slider_indicator: "voxygen.element.ui.generic.slider.indicator",
 
-        unlock: "voxygen.element.ui.generic.buttons.unlock",
-        unlock_hover: "voxygen.element.ui.generic.buttons.unlock_hover",
-        unlock_press: "voxygen.element.ui.generic.buttons.unlock_press",
     }
 }
 
@@ -264,6 +261,8 @@ pub struct Controls {
 }
 
 #[derive(Clone)]
+// Offline build: some multiplayer-only messages and images are no longer used.
+#[allow(dead_code)]
 enum Message {
     Quit,
     Back,

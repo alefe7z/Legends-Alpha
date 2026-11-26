@@ -120,3 +120,7 @@ loading-tips =
     .a19 = Press '{ $gameinput-roll }' to roll. Rolling can be used to move faster and dodge enemy attacks.
     .a20 = Wondering what an item is used for? Search 'input:<item name>' in crafting to see what recipes it's used in.
     .a21 = You can take screenshots with '{ $gameinput-screenshot }'.
+
+## Offline build
+
+main-offline-only = This game is offline only. Use Singleplayer.

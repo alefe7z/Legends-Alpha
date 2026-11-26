@@ -1,0 +1,12 @@
+// Superforça: libera toda a força do corpo (mais dano e velocidade de ataque).
+SelfBuff(
+    buildup_duration: 0.3,
+    cast_duration: 0.2,
+    recover_duration: 0.3,
+    buffs: [
+        BuffDesc(kind: Berserk, data: BuffData(strength: 0.6, duration: Some(15.0))),
+        BuffDesc(kind: Fortitude, data: BuffData(strength: 0.5, duration: Some(15.0))),
+    ],
+    energy_cost: 40,
+    enforced_limit: false,
+)

@@ -318,6 +318,30 @@
             Simple(Some(Sceptre(UnlockAura)), "common.abilities.sceptre.wardingaura"),
         ],
     )),
+    // Mana (raça Mago). Uma entrada por tipo em assets/common/mana/manifest.ron.
+    // Fogo usa as magias do cajado (e a árvore de habilidades do cajado).
+    Custom("Mana: Fogo"): AbilitySet((
+        primary: Simple(None, "common.abilities.staff.firebomb"),
+        secondary: Simple(None, "common.abilities.staff.flamethrower"),
+        abilities: [
+            Simple(Some(Staff(FireShockwave)), "common.abilities.staff.fireshockwave"),
+            Simple(Some(Staff(NapalmStrike)), "common.abilities.staff.napalm_strike"),
+            Simple(Some(Staff(FlameCloak)), "common.abilities.staff.flame_cloak"),
+            Simple(Some(Staff(FireDash)), "common.abilities.staff.fire_dash"),
+            Simple(Some(Staff(FireBreath)), "common.abilities.staff.fire_breath"),
+            Simple(Some(Staff(Pyroclasm)), "common.abilities.staff.pyroclasm"),
+        ],
+    )),
+    Custom("Mana: Superforça"): AbilitySet((
+        primary: Simple(None, "common.abilities.mana.strength_punch"),
+        secondary: Simple(None, "common.abilities.mana.strength_surge"),
+        abilities: [],
+    )),
+    Custom("Mana: Supervelocidade"): AbilitySet((
+        primary: Simple(None, "common.abilities.mana.speed_punch"),
+        secondary: Simple(None, "common.abilities.mana.speed_surge"),
+        abilities: [],
+    )),
     Custom("Husk"): AbilitySet((
         primary: Simple(None, "common.abilities.custom.husk.singlestrike"),
         secondary: Simple(None, "common.abilities.custom.husk.triplestrike"),

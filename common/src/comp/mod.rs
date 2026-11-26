@@ -24,6 +24,7 @@ pub mod invite;
 mod last;
 mod location;
 pub mod loot_owner;
+pub mod mana;
 pub mod melee;
 pub mod misc;
 pub mod ori;

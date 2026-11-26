@@ -743,7 +743,9 @@ impl StateExt for State {
             self.write_component_ignore_entity_dead(entity, stats);
             self.write_component_ignore_entity_dead(entity, active_abilities);
             self.write_component_ignore_entity_dead(entity, skill_set);
-            self.write_component_ignore_entity_dead(entity, inventory);
+            // Innate items (e.g. a Mage's Mana) are derived from the body and
+            // are never persisted, so they are (re)applied on every load.
+            self.write_component_ignore_entity_dead(entity, inventory.with_innate_from_body(&body));
             self.write_component_ignore_entity_dead(
                 entity,
                 comp::InventoryUpdateBuffer::new(comp::InventoryUpdateEvent::Init),

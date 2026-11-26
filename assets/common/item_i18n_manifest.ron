@@ -901,6 +901,15 @@
             "common.items.weapons.empty.empty",
         ): "common-items-weapons-empty-empty",
         Simple(
+            "common.items.mana.fire",
+        ): "mana-fire",
+        Simple(
+            "common.items.mana.super_strength",
+        ): "mana-super_strength",
+        Simple(
+            "common.items.mana.super_speed",
+        ): "mana-super_speed",
+        Simple(
             "common.items.weapons.sword.caladbolg",
         ): "weapon-sword-caladbolg",
         Simple(

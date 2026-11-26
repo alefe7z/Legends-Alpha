@@ -57,6 +57,13 @@ pub struct Inventory {
     overflow_items: Vec<Item>,
     /// Recipes that are available for use
     recipe_book: RecipeBook,
+    /// Innate "weapon" used as the main hand item whenever the main hand is
+    /// empty. Mages (`Species::Mage`) get the invisible item of their Mana
+    /// kind here, which lets them cast with bare hands. It is not part of the
+    /// loadout, so it can never be unequipped, dropped, traded or persisted
+    /// (it is derived from the body every time the character is loaded).
+    #[serde(default)]
+    innate_mainhand: Option<Item>,
 }
 
 /// Errors which the methods on `Inventory` produce
@@ -124,11 +131,37 @@ impl Inventory {
 
     pub fn with_loadout(loadout: Loadout, body: Body) -> Inventory {
         if let Body::Humanoid(_) = body {
-            Self::with_loadout_humanoid(loadout)
+            Self::with_loadout_humanoid(loadout).with_innate_from_body(&body)
         } else {
             Self::with_loadout_animal(loadout)
         }
     }
+
+    /// Sets the innate main hand item according to the body (e.g. the Mana
+    /// of a Mage). See [`Inventory::innate_mainhand`].
+    pub fn with_innate_from_body(mut self, body: &Body) -> Inventory {
+        self.set_innate_from_body(body);
+        self
+    }
+
+    /// Sets the innate main hand item according to the body (e.g. the Mana
+    /// of a Mage). See [`Inventory::innate_mainhand`].
+    pub fn set_innate_from_body(&mut self, body: &Body) {
+        self.innate_mainhand = match body {
+            Body::Humanoid(body) => crate::comp::mana::mana_of(body).and_then(|mana| {
+                Item::new_from_asset(&mana.item)
+                    .inspect_err(|e| {
+                        tracing::error!(?e, item = %mana.item, "Failed to load Mana item")
+                    })
+                    .ok()
+            }),
+            _ => None,
+        };
+    }
+
+    /// The innate main hand item, used when nothing is equipped in the main
+    /// hand.
+    pub fn innate_mainhand(&self) -> Option<&Item> { self.innate_mainhand.as_ref() }
 
     pub fn with_loadout_humanoid(loadout: Loadout) -> Inventory {
         Inventory {
@@ -136,6 +169,7 @@ impl Inventory {
             slots: vec![None; DEFAULT_INVENTORY_SLOTS],
             overflow_items: Vec::new(),
             recipe_book: RecipeBook::default(),
+            innate_mainhand: None,
         }
     }
 
@@ -145,6 +179,7 @@ impl Inventory {
             slots: vec![None; 1],
             overflow_items: Vec::new(),
             recipe_book: RecipeBook::default(),
+            innate_mainhand: None,
         }
     }
 
@@ -507,7 +542,7 @@ impl Inventory {
     pub fn get_slot(&self, slot: Slot) -> Option<&Item> {
         match slot {
             Slot::Inventory(inv_slot) => self.get(inv_slot),
-            Slot::Equip(equip) => self.equipped(equip),
+            Slot::Equip(equip) => self.loadout.equipped(equip),
             Slot::Overflow(overflow) => self.get_overflow(overflow),
         }
     }
@@ -531,9 +566,17 @@ impl Inventory {
         self.slot_mut(inv_slot_id).and_then(Option::as_mut)
     }
 
-    /// Returns a reference to the item (if any) equipped in the given EquipSlot
+    /// Returns a reference to the item (if any) equipped in the given
+    /// EquipSlot. When the active main hand is empty this returns the innate
+    /// main hand item (e.g. a Mage's Mana), if any.
     pub fn equipped(&self, equip_slot: EquipSlot) -> Option<&Item> {
-        self.loadout.equipped(equip_slot)
+        self.loadout.equipped(equip_slot).or_else(|| {
+            if equip_slot == EquipSlot::ActiveMainhand {
+                self.innate_mainhand.as_ref()
+            } else {
+                None
+            }
+        })
     }
 
     pub fn loadout_items_with_persistence_key(
@@ -915,7 +958,7 @@ impl Inventory {
         let (inv_slot_for_equipped, slots_from_equipped) = self
             .get(inv_slot)
             .and_then(|item| self.loadout.get_slot_to_equip_into(item))
-            .and_then(|equip_slot| self.equipped(equip_slot))
+            .and_then(|equip_slot| self.loadout.equipped(equip_slot))
             .map_or((1, 0), |item| {
                 (
                     if item.is_stackable() && self.can_stack(item) {
@@ -1001,6 +1044,7 @@ impl Inventory {
     /// an item
     pub fn free_after_unequip(&self, equip_slot: EquipSlot) -> i32 {
         let (inv_slot_for_unequipped, slots_from_equipped) = self
+            .loadout
             .equipped(equip_slot)
             .map_or((0, 0), |item| (1, item.slots().len()));
 
@@ -1045,6 +1089,7 @@ impl Inventory {
     /// item slots
     pub fn free_after_swap(&self, equip_slot: EquipSlot, inv_slot: InvSlotId) -> i32 {
         let (inv_slot_for_equipped, slots_from_equipped) = self
+            .loadout
             .equipped(equip_slot)
             .map_or((0, 0), |item| (1, item.slots().len()));
         let (inv_slot_for_inv_item, slots_from_inv_item) = self

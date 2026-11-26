@@ -730,6 +730,7 @@ pub fn convert_body_from_database(
                 skin: json_model.skin,
                 eye_color: json_model.eye_color,
                 height_scale: json_model.height_scale,
+                mana: json_model.mana,
             })
         },
         "quadruped_low" => {

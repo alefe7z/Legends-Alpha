@@ -96,6 +96,31 @@
             (56, 55, 54),       // Gray 4
             (20, 19, 17),       // Black
         ],
+        // Mago: mesmas cores de cabelo do Humano.
+        Mage: [
+            (210, 204, 130),    // Platinum Blonde
+            (220, 199, 119),    // Cream Blonde
+            (212, 156, 73),     // Gold Blonde
+            (176, 106, 41),     // Summer Blonde
+            (216, 146, 114),    // Matte Pink
+            (203, 200, 98),     // Light
+            (107, 76, 51),      // Oak
+            (97, 46, 19),       // Light Brown
+            (64, 32, 18),       // Dark Brown
+            (57, 56, 61),       // Raven Black
+            (47, 36, 30),       // Deep Brown
+            (89, 55, 49),       // Matte Red
+            (135, 38, 39),      // Dark Red
+            (88, 26, 29),       // Wine Red
+            (138, 50, 9),       // Orange
+            (154, 70, 10),      // Bright Orange
+            (239, 242, 245),    // White
+            (204, 201, 199),    // Gray 1
+            (146, 141, 136),    // Gray 2
+            (97, 92, 88),       // Gray 3
+            (56, 55, 54),       // Gray 4
+            (20, 19, 17),       // Black
+        ],
         Orc: [
             (66, 66, 59),       // Wise Grey
             (119, 119, 109),    // Silver

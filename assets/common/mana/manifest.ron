@@ -1,0 +1,18 @@
+// Tipos de Mana disponíveis para a raça Mago.
+//
+// IMPORTANTE: o personagem guarda a POSIÇÃO do tipo nesta lista. Para não
+// trocar a Mana de personagens existentes, sempre adicione tipos novos no FIM
+// e nunca reordene ou remova entradas.
+//
+// Para cada tipo:
+//   id:       identificador; os textos ficam em `mana-<id>` e `mana-<id>-desc`
+//             (assets/voxygen/i18n/*/mana.ftl)
+//   category: Elemental (controle dos elementos) ou Physical (alterações físicas)
+//   item:     item invisível que dá as habilidades (assets/common/items/mana/)
+//             As habilidades ficam em assets/common/abilities/ability_set_manifest.ron
+//             sob Custom("Mana: <Nome>").
+[
+    (id: "fire", category: Elemental, item: "common.items.mana.fire"),
+    (id: "super_strength", category: Physical, item: "common.items.mana.super_strength"),
+    (id: "super_speed", category: Physical, item: "common.items.mana.super_speed"),
+]

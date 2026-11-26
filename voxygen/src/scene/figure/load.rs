@@ -503,6 +503,8 @@ make_vox_spec!(
          extra,
      },
      spec| {
+        // Some species (e.g. Mages) reuse the models of another species.
+        let body = &body.visual();
         const DEFAULT_LOADOUT: super::cache::CharacterCacheKey = super::cache::CharacterCacheKey {
             third_person: None,
             tool: None,

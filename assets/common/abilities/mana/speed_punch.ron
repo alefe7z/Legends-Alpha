@@ -1,0 +1,18 @@
+// Supervelocidade: golpe muito rápido.
+BasicMelee(
+    energy_cost: 0,
+    buildup_duration: 0.05,
+    swing_duration: 0.05,
+    hit_timing: 0.5,
+    recover_duration: 0.15,
+    melee_constructor: (
+        kind: Bash(
+            damage: 4.0,
+            poise: 3.0,
+            knockback: 2.0,
+            energy_regen: 3.0,
+        ),
+        range: 3.5,
+        angle: 25.0,
+    ),
+)

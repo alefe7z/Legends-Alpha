@@ -186,7 +186,7 @@ enum Mode {
         offhand: Option<&'static str>,
 
         body_type_buttons: [button::State; 2],
-        species_buttons: [button::State; 6],
+        species_buttons: [button::State; 7],
         tool_buttons: [button::State; 6],
         sliders: Sliders,
         hardcore_enabled: bool,
@@ -354,6 +354,7 @@ enum Message {
     Accessory(u8),
     Beard(u8),
     HeightScale(u8),
+    Mana(u8),
     StartingSite(usize),
     PrevStartingSite,
     NextStartingSite,
@@ -1018,7 +1019,10 @@ impl Controls {
                     (Column::new(), Column::new(), Row::new())
                 } else {
                     let (body_m_ico, body_f_ico) = match body.species {
-                        humanoid::Species::Human => (imgs.human_m, imgs.human_f),
+                        // Mages look like humans, so they share the human icons.
+                        humanoid::Species::Human | humanoid::Species::Mage => {
+                            (imgs.human_m, imgs.human_f)
+                        },
                         humanoid::Species::Orc => (imgs.orc_m, imgs.orc_f),
                         humanoid::Species::Dwarf => (imgs.dwarf_m, imgs.dwarf_f),
                         humanoid::Species::Elf => (imgs.elf_m, imgs.elf_f),
@@ -1069,6 +1073,7 @@ impl Controls {
                         elf_button,
                         draugr_button,
                         danari_button,
+                        mage_button,
                     ] = species_buttons;
                     let species = Column::with_children(vec![
                         Row::with_children(vec![
@@ -1122,6 +1127,18 @@ impl Controls {
                                 Message::Species(humanoid::Species::Danari),
                                 danari_icon,
                                 "common-species-danari",
+                            )
+                            .into(),
+                        ])
+                        .spacing(1)
+                        .into(),
+                        Row::with_children(vec![
+                            icon_button_tooltip(
+                                mage_button,
+                                matches!(body.species, humanoid::Species::Mage),
+                                Message::Species(humanoid::Species::Mage),
+                                human_icon,
+                                "common-species-mage",
                             )
                             .into(),
                         ])
@@ -1369,6 +1386,42 @@ impl Controls {
                 .max_width(200)
                 .padding(5);
 
+                // Mana selector: only for species born with Mana, and only on
+                // creation (a Mage's Mana can never be changed afterwards).
+                let mana_selector: Element<Message> = match (
+                    character_id.is_none() && body.species.has_mana(),
+                    comp::mana::mana_of(body),
+                ) {
+                    (true, Some(mana)) => {
+                        let mana_count = comp::mana::ManaManifest::count();
+                        let key = mana.i18n_key();
+                        let title = format!(
+                            "{}: {} ({})",
+                            i18n.get_msg("char_selection-mana"),
+                            i18n.get_msg(&key),
+                            i18n.get_msg(mana.category.i18n_key()),
+                        );
+                        Column::with_children(vec![
+                            char_slider_greyable(
+                                mana_count > 1,
+                                title,
+                                &mut sliders.mana,
+                                mana_count.saturating_sub(1),
+                                body.mana,
+                                Message::Mana,
+                                (fonts, imgs),
+                            ),
+                            Text::new(i18n.get_attr(&key, "desc"))
+                                .size(fonts.cyri.scale(SLIDER_TEXT_SIZE))
+                                .into(),
+                        ])
+                        .max_width(200)
+                        .padding(5)
+                        .into()
+                    },
+                    _ => Space::new(Length::Shrink, Length::Shrink).into(),
+                };
+
                 let hardcore_checkbox = if character_id.is_some() {
                     Row::new()
                 } else {
@@ -1413,6 +1466,7 @@ impl Controls {
                     body_type.into(),
                     tool.into(),
                     species.into(),
+                    mana_selector,
                     slider_options.into(),
                     hardcore_checkbox.into(),
                     rand_character.into(),
@@ -1974,6 +2028,12 @@ impl Controls {
                     );
                 }
             },
+            Message::Mana(value) => {
+                if let Mode::CreateOrEdit { body, .. } = &mut self.mode {
+                    body.mana = value;
+                    body.validate();
+                }
+            },
             Message::HairStyle(value) => {
                 if let Mode::CreateOrEdit { body, .. } = &mut self.mode {
                     body.hair_style = value;
@@ -2236,5 +2296,6 @@ struct Sliders {
     accessory: slider::State,
     beard: slider::State,
     height_scale: slider::State,
+    mana: slider::State,
     starting_site: slider::State,
 }

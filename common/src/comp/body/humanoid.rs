@@ -31,6 +31,10 @@ make_proj_elim!(
         // 255 = Self::HEIGHT_SCALE_RANGE.end
         #[typed(pure)]
         pub height_scale: u8,
+        // Index into the Mana manifest (`common.mana.manifest`). Only
+        // meaningful for species where `Species::has_mana` is true.
+        #[typed(pure)]
+        pub mana: u8,
     }
 );
 
@@ -52,6 +56,7 @@ impl Body {
                 eye_color: 0,
                 eyes: 0,
                 height_scale: 0,
+                mana: 0,
             })
         })
     }
@@ -78,6 +83,20 @@ impl Body {
                                            * NPCs
                                            * with the default being a random one */
             height_scale: rng.random(),
+            mana: if species.has_mana() {
+                rng.random_range(0..crate::comp::mana::ManaManifest::count().max(1))
+            } else {
+                0
+            },
+        }
+    }
+
+    /// The body used to pick models, colours and other visual assets. Mages
+    /// look exactly like humans, so they reuse every human asset.
+    pub fn visual(&self) -> Body {
+        Body {
+            species: self.species.visual(),
+            ..*self
         }
     }
 
@@ -93,6 +112,12 @@ impl Body {
         self.accessory = self
             .accessory
             .min(self.species.num_accessories(self.body_type) - 1);
+        self.mana = if self.species.has_mana() {
+            self.mana
+                .min(crate::comp::mana::ManaManifest::count().saturating_sub(1))
+        } else {
+            0
+        };
     }
 
     pub fn height_scale(&self) -> f32 {
@@ -109,8 +134,8 @@ impl Body {
         match (self.species, self.body_type) {
             (Species::Orc, BodyType::Male) => 1.18,
             (Species::Orc, BodyType::Female) => 1.05,
-            (Species::Human, BodyType::Male) => 1.05,
-            (Species::Human, BodyType::Female) => 0.99,
+            (Species::Human | Species::Mage, BodyType::Male) => 1.05,
+            (Species::Human | Species::Mage, BodyType::Female) => 0.99,
             (Species::Elf, BodyType::Male) => 1.06,
             (Species::Elf, BodyType::Female) => 0.99,
             (Species::Dwarf, BodyType::Male) => 0.87,
@@ -140,6 +165,9 @@ make_case_elim!(
         Human = 3,
         Orc = 4,
         Draugr = 5,
+        /// Mago: a human born with magical powers (Mana). Visually identical
+        /// to `Human`; see `Species::visual`.
+        Mage = 6,
     }
 );
 
@@ -163,20 +191,22 @@ impl<'a, SpeciesMeta> core::ops::Index<&'a Species> for AllSpecies<SpeciesMeta> 
             Species::Danari => &self.danari,
             Species::Dwarf => &self.dwarf,
             Species::Elf => &self.elf,
-            Species::Human => &self.human,
+            // Mages share all per-species data (names, etc.) with humans.
+            Species::Human | Species::Mage => &self.human,
             Species::Orc => &self.orc,
             Species::Draugr => &self.draugr,
         }
     }
 }
 
-pub const ALL_SPECIES: [Species; 6] = [
+pub const ALL_SPECIES: [Species; 7] = [
     Species::Danari,
     Species::Dwarf,
     Species::Elf,
     Species::Human,
     Species::Orc,
     Species::Draugr,
+    Species::Mage,
 ];
 
 impl<'a, SpeciesMeta: 'a> IntoIterator for &'a AllSpecies<SpeciesMeta> {
@@ -323,12 +353,24 @@ pub const DRAUGR_EYE_COLORS: [EyeColor; 6] = [
 ];
 
 impl Species {
+    /// The species whose appearance (models, colours, hair styles...) this
+    /// species uses. Mages look like humans, so they reuse every human asset.
+    pub fn visual(self) -> Species {
+        match self {
+            Species::Mage => Species::Human,
+            other => other,
+        }
+    }
+
+    /// Whether this species is born with Mana (magical powers).
+    pub fn has_mana(self) -> bool { matches!(self, Species::Mage) }
+
     fn skin_colors(self) -> &'static [Skin] {
         match self {
             Species::Danari => &DANARI_SKIN_COLORS,
             Species::Dwarf => &DWARF_SKIN_COLORS,
             Species::Elf => &ELF_SKIN_COLORS,
-            Species::Human => &HUMAN_SKIN_COLORS,
+            Species::Human | Species::Mage => &HUMAN_SKIN_COLORS,
             Species::Orc => &ORC_SKIN_COLORS,
             Species::Draugr => &DRAUGR_SKIN_COLORS,
         }
@@ -339,7 +381,7 @@ impl Species {
             Species::Danari => &DANARI_EYE_COLORS,
             Species::Dwarf => &DWARF_EYE_COLORS,
             Species::Elf => &ELF_EYE_COLORS,
-            Species::Human => &HUMAN_EYE_COLORS,
+            Species::Human | Species::Mage => &HUMAN_EYE_COLORS,
             Species::Orc => &ORC_EYE_COLORS,
             Species::Draugr => &DRAUGR_EYE_COLORS,
         }
@@ -355,7 +397,7 @@ impl Species {
             Species::Danari => 17,
             Species::Dwarf => 21,
             Species::Elf => 24,
-            Species::Human => 22,
+            Species::Human | Species::Mage => 22,
             Species::Orc => 13,
             Species::Draugr => 25,
         }
@@ -387,8 +429,8 @@ impl Species {
             (Species::Dwarf, BodyType::Male) => 15,
             (Species::Elf, BodyType::Female) => 22,
             (Species::Elf, BodyType::Male) => 15,
-            (Species::Human, BodyType::Female) => 20,
-            (Species::Human, BodyType::Male) => 21,
+            (Species::Human | Species::Mage, BodyType::Female) => 20,
+            (Species::Human | Species::Mage, BodyType::Male) => 21,
             (Species::Orc, BodyType::Female) => 15,
             (Species::Orc, BodyType::Male) => 15,
             (Species::Draugr, BodyType::Female) => 15,
@@ -404,8 +446,8 @@ impl Species {
             (Species::Dwarf, BodyType::Male) => 7,
             (Species::Elf, BodyType::Female) => 6,
             (Species::Elf, BodyType::Male) => 5,
-            (Species::Human, BodyType::Female) => 1,
-            (Species::Human, BodyType::Male) => 1,
+            (Species::Human | Species::Mage, BodyType::Female) => 1,
+            (Species::Human | Species::Mage, BodyType::Male) => 1,
             (Species::Orc, BodyType::Female) => 9,
             (Species::Orc, BodyType::Male) => 12,
             (Species::Draugr, BodyType::Female) => 2,
@@ -423,8 +465,8 @@ impl Species {
             (Species::Dwarf, BodyType::Male) => 9,
             (Species::Elf, BodyType::Female) => 6,
             (Species::Elf, BodyType::Male) => 8,
-            (Species::Human, BodyType::Female) => 6,
-            (Species::Human, BodyType::Male) => 7,
+            (Species::Human | Species::Mage, BodyType::Female) => 6,
+            (Species::Human | Species::Mage, BodyType::Male) => 7,
             (Species::Orc, BodyType::Female) => 6,
             (Species::Orc, BodyType::Male) => 2,
             (Species::Draugr, BodyType::Female) => 3,
@@ -440,8 +482,8 @@ impl Species {
             (Species::Dwarf, BodyType::Male) => 23,
             (Species::Elf, BodyType::Female) => 1,
             (Species::Elf, BodyType::Male) => 8,
-            (Species::Human, BodyType::Female) => 1,
-            (Species::Human, BodyType::Male) => 10,
+            (Species::Human | Species::Mage, BodyType::Female) => 1,
+            (Species::Human | Species::Mage, BodyType::Male) => 10,
             (Species::Orc, BodyType::Female) => 1,
             (Species::Orc, BodyType::Male) => 7,
             (Species::Draugr, BodyType::Female) => 1,

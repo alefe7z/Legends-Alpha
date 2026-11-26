@@ -650,7 +650,13 @@ pub fn edit_character(
     {
         let allow_change = match trusted_change {
             Some(change) => change.expected_old_body == char.body,
-            None => new.species == old.species && new.body_type == old.body_type,
+            // Species, body type and Mana are chosen on creation and cannot be
+            // changed by the player afterwards.
+            None => {
+                new.species == old.species
+                    && new.body_type == old.body_type
+                    && new.mana == old.mana
+            },
         };
         if !allow_change {
             warn!(

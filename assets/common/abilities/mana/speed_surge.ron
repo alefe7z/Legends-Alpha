@@ -1,0 +1,11 @@
+// Supervelocidade: dobra a velocidade de movimento e de ataque.
+SelfBuff(
+    buildup_duration: 0.1,
+    cast_duration: 0.1,
+    recover_duration: 0.1,
+    buffs: [
+        BuffDesc(kind: Hastened, data: BuffData(strength: 1.0, duration: Some(10.0))),
+    ],
+    energy_cost: 40,
+    enforced_limit: false,
+)

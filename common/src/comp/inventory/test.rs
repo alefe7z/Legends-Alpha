@@ -25,6 +25,7 @@ fn push_full() {
         loadout: LoadoutBuilder::empty().build(),
         overflow_items: vec![],
         recipe_book: RecipeBook::default(),
+        innate_mainhand: None,
     };
     assert_eq!(
         inv.push(TEST_ITEMS[0].duplicate(ability_map, msm))
@@ -46,6 +47,7 @@ fn push_all_full() {
         loadout: LoadoutBuilder::empty().build(),
         overflow_items: vec![],
         recipe_book: RecipeBook::default(),
+        innate_mainhand: None,
     };
     let Error::Full(leftovers) = inv
         .push_all(
@@ -77,6 +79,7 @@ fn push_unique_all_full() {
         loadout: LoadoutBuilder::empty().build(),
         overflow_items: vec![],
         recipe_book: RecipeBook::default(),
+        innate_mainhand: None,
     };
     inv.push_all_unique(
         TEST_ITEMS
@@ -97,6 +100,7 @@ fn push_all_empty() {
         loadout: LoadoutBuilder::empty().build(),
         overflow_items: vec![],
         recipe_book: RecipeBook::default(),
+        innate_mainhand: None,
     };
     inv.push_all(
         TEST_ITEMS
@@ -117,6 +121,7 @@ fn push_all_unique_empty() {
         loadout: LoadoutBuilder::empty().build(),
         overflow_items: vec![],
         recipe_book: RecipeBook::default(),
+        innate_mainhand: None,
     };
     inv.push_all_unique(
         TEST_ITEMS
@@ -530,4 +535,37 @@ fn fill_inv_slots(inv: &mut Inventory, items: u16) {
     for _ in 0..items {
         inv.push(boots.duplicate(ability_map, msm)).unwrap();
     }
+}
+
+/// A Mage's Mana acts as the main hand item only while the main hand is
+/// empty, and can never be moved out of the inventory.
+#[test]
+fn mage_mana_is_innate_mainhand() {
+    use crate::comp::{Body, body::humanoid, mana::ManaManifest};
+
+    let mut body = humanoid::Body::random_with(&mut rand::rng(), &humanoid::Species::Mage);
+    body.mana = 0;
+    let mana_item = ManaManifest::get(0).expect("Mana manifest is empty").item;
+
+    let mut inv = Inventory::with_empty().with_innate_from_body(&Body::Humanoid(body));
+    let equipped = inv
+        .equipped(EquipSlot::ActiveMainhand)
+        .and_then(|i| i.item_definition_id().itemdef_id().map(str::to_owned));
+    assert_eq!(equipped, Some(mana_item));
+    // Not part of the loadout: it cannot be picked up from the equip slot.
+    assert!(inv.get_slot(Slot::Equip(EquipSlot::ActiveMainhand)).is_none());
+    assert!(inv.loadout.equipped(EquipSlot::ActiveMainhand).is_none());
+
+    // An equipped weapon takes priority over the Mana.
+    let sword = Item::new_from_asset_expect("common.items.weapons.sword.starter");
+    inv.replace_loadout_item(EquipSlot::ActiveMainhand, Some(sword), Time(0.0));
+    let equipped = inv
+        .equipped(EquipSlot::ActiveMainhand)
+        .and_then(|i| i.item_definition_id().itemdef_id().map(str::to_owned));
+    assert_eq!(equipped.as_deref(), Some("common.items.weapons.sword.starter"));
+
+    // Other species have no innate item.
+    let human = humanoid::Body::random_with(&mut rand::rng(), &humanoid::Species::Human);
+    let inv = Inventory::with_empty().with_innate_from_body(&Body::Humanoid(human));
+    assert!(inv.innate_mainhand().is_none());
 }

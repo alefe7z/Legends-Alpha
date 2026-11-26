@@ -841,8 +841,8 @@ impl ParticleMgr {
             let pipe_offset = match (body.species, body.body_type) {
                 (Orc, Male) => Vec3::new(5.5, 10.5, 0.0),
                 (Orc, Female) => Vec3::new(4.5, 10.0, -2.5),
-                (Human, Male) => Vec3::new(4.5, 12.0, -3.0),
-                (Human, Female) => Vec3::new(4.5, 11.5, -3.0),
+                (Human | Mage, Male) => Vec3::new(4.5, 12.0, -3.0),
+                (Human | Mage, Female) => Vec3::new(4.5, 11.5, -3.0),
                 (Elf, Male) => Vec3::new(4.5, 12.0, -3.0),
                 (Elf, Female) => Vec3::new(4.5, 9.5, -3.0),
                 (Dwarf, Male) => Vec3::new(4.5, 11.0, -4.0),

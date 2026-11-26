@@ -66,6 +66,7 @@ impl ManaKind {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+#[serde(transparent)]
 pub struct ManaManifest(pub Vec<ManaKind>);
 
 impl FileAsset for ManaManifest {
@@ -103,13 +104,36 @@ mod tests {
     };
 
     #[test]
+    fn mana_abilities_parse() {
+        use crate::{
+            assets::{AssetExt, Ron},
+            comp::CharacterAbility,
+        };
+        // AbilityMap silently falls back to a default ability when a file
+        // fails to parse, so check the Mana ability files explicitly.
+        for ability in [
+            "common.abilities.mana.strength_punch",
+            "common.abilities.mana.strength_surge",
+            "common.abilities.mana.speed_punch",
+            "common.abilities.mana.speed_surge",
+        ] {
+            if let Err(e) = Ron::<CharacterAbility>::load(ability) {
+                panic!("Failed to load Mana ability {ability}: {e:?}");
+            }
+        }
+    }
+
+    #[test]
     fn mana_manifest_is_valid() {
         let manifest = ManaManifest::load().read();
         assert!(!manifest.0.is_empty(), "Mana manifest must not be empty");
         let ability_map = AbilityMap::load().read();
         for kind in &manifest.0 {
             let item = Item::new_from_asset(&kind.item).unwrap_or_else(|e| {
-                panic!("Mana '{}' references missing item {}: {e:?}", kind.id, kind.item)
+                panic!(
+                    "Mana '{}' references missing item {}: {e:?}",
+                    kind.id, kind.item
+                )
             });
             assert!(
                 matches!(&*item.kind(), ItemKind::Tool(_)),

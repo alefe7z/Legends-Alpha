@@ -653,9 +653,7 @@ pub fn edit_character(
             // Species, body type and Mana are chosen on creation and cannot be
             // changed by the player afterwards.
             None => {
-                new.species == old.species
-                    && new.body_type == old.body_type
-                    && new.mana == old.mana
+                new.species == old.species && new.body_type == old.body_type && new.mana == old.mana
             },
         };
         if !allow_change {

@@ -289,8 +289,8 @@ impl<'a> From<&'a Body> for SkeletonAttr {
             head_scale: match (body.species, body.body_type) {
                 (Orc, Male) => 0.9,
                 (Orc, Female) => 0.9,
-                (Human, Male) => 0.9,
-                (Human, Female) => 0.9,
+                (Human | Mage, Male) => 0.9,
+                (Human | Mage, Female) => 0.9,
                 (Elf, Male) => 0.9,
                 (Elf, Female) => 0.9,
                 (Dwarf, Male) => 1.0,
@@ -303,8 +303,8 @@ impl<'a> From<&'a Body> for SkeletonAttr {
             head: match (body.species, body.body_type) {
                 (Orc, Male) => (-2.0, 9.0),
                 (Orc, Female) => (-2.0, 9.5),
-                (Human, Male) => (-2.3, 9.5),
-                (Human, Female) => (-2.0, 9.5),
+                (Human | Mage, Male) => (-2.3, 9.5),
+                (Human | Mage, Female) => (-2.0, 9.5),
                 (Elf, Male) => (-2.5, 9.5),
                 (Elf, Female) => (-1.0, 9.5),
                 (Dwarf, Male) => (-2.0, 10.0),

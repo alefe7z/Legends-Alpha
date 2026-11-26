@@ -150,9 +150,9 @@ impl Inventory {
         self.innate_mainhand = match body {
             Body::Humanoid(body) => crate::comp::mana::mana_of(body).and_then(|mana| {
                 Item::new_from_asset(&mana.item)
-                    .inspect_err(|e| {
-                        tracing::error!(?e, item = %mana.item, "Failed to load Mana item")
-                    })
+                    .inspect_err(
+                        |e| tracing::error!(?e, item = %mana.item, "Failed to load Mana item"),
+                    )
                     .ok()
             }),
             _ => None,
